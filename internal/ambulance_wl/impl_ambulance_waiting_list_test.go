@@ -104,3 +104,25 @@ func (suite *AmbulanceWlSuite) Test_UpdateWl_DbServiceUpdateCalled() {
 	// ASSERT
 	suite.dbServiceMock.AssertCalled(suite.T(), "UpdateDocument", mock.Anything, "test-ambulance", mock.Anything)
 }
+
+func (suite *AmbulanceWlSuite) Test_GetWlEntry_EntryFound_ReturnsEntry() {
+	// ARRANGE
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+	ctx.Set("db_service", suite.dbServiceMock)
+	ctx.Params = []gin.Param{
+		{Key: "ambulanceId", Value: "test-ambulance"},
+		{Key: "entryId", Value: "test-entry"},
+	}
+
+	sut := implAmbulanceWaitingListAPI{}
+	// ACT
+	sut.GetWaitingListEntry(ctx)
+
+	// ASSERT
+	suite.Equal(200, recorder.Code)
+	suite.Contains(recorder.Body.String(), "test-entry")
+
+	suite.dbServiceMock.AssertCalled(suite.T(), "FindDocument", mock.Anything, "test-ambulance")
+}
